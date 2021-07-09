@@ -7,14 +7,12 @@ app:
     
 spring:
   jpa:
-    open-in-view: false
-    show-sql: false
     hibernate:
       ddl-auto: none
   datasource:
-    url:  jdbc:mysql://localhost:3306/mutant
+    url:  jdbc:mysql://database-1.c6x9ym2ncfzc.us-east-2.rds.amazonaws.com:3306/mutant
     username:  mutantuser
-    password:  ThePassword  
+    password:  ThePassword 
     driver-class-name:  com.mysql.jdbc.Driver
 
        

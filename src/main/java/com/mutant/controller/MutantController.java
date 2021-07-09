@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -23,8 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mutant.dto.DnaDTO;
 import com.mutant.dto.StatisticsDTO;
+import com.mutant.model.Dna;
 import com.mutant.model.Statistics;
-import com.mutant.repository.StatisticsRepository;
+import com.mutant.repository.*;
 import com.mutant.service.IMutantSearchService;
 
 import io.swagger.annotations.ApiOperation;
@@ -46,9 +48,11 @@ public class MutantController {
 	@Autowired
 	StatisticsRepository statisticsRepository;
 	
+	@Autowired
+	DnaRepository dnaRepository;
+	
 	@PostMapping("/mutant")
     public ResponseEntity mutantSearch(@RequestBody @Valid DnaDTO body) {
-		System.out.println(body.toString());
 		String[] dna = body.getDna();
 		String[] cadenaMutante = {"CCCC","TTTT","AAAA","GGGG"};
 		int c = 0;
@@ -71,6 +75,11 @@ public class MutantController {
 			Statistics estadisticas = s.get();
 			estadisticas.setValue(estadisticas.getValue()+1);
 			statisticsRepository.save(estadisticas);
+			Dna adn = new Dna();
+			String jsonString = new com.google.gson.Gson().toJson(body);
+			adn.setDna(jsonString);
+			adn.setType("MUTANT");
+			dnaRepository.save(adn);
 			return new ResponseEntity<String>("", HttpStatus.OK);
 			
 		}else {
@@ -79,6 +88,11 @@ public class MutantController {
 			Statistics estadisticas = s.get();
 			estadisticas.setValue(estadisticas.getValue()+1);
 			statisticsRepository.save(estadisticas);
+			Dna adn = new Dna();
+			String jsonString = new com.google.gson.Gson().toJson(body);
+			adn.setDna(jsonString);
+			adn.setType("HUMAN");
+			dnaRepository.save(adn);
 			return new ResponseEntity<String>("", HttpStatus.FORBIDDEN);
 		}
 	}
@@ -89,15 +103,15 @@ public class MutantController {
 	@RequestMapping(value = ("/stats"), method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public StatisticsDTO stats() {
 		StatisticsDTO statisticsDto = new StatisticsDTO();
-		Optional<Statistics> s;
-		s = statisticsRepository.findById("VALOR_MUTANTES");
-		Statistics estadisticas = s.get();
-		statisticsDto.setCountMutantDna(estadisticas.getValue());
-		s = statisticsRepository.findById("VALOR_HUMANOS");
-		estadisticas = s.get();	
-		statisticsDto.setCountHumanDna(estadisticas.getValue());
-		
-		statisticsDto.setRatio((float) statisticsDto.getCountMutantDna()/statisticsDto.getCountHumanDna());
+		Iterable<Dna> Mdnas = dnaRepository.findByType("MUTANT");
+		statisticsDto.setCountMutantDna(IterableUtils.size(Mdnas));
+		Iterable<Dna> Hdnas = dnaRepository.findByType("HUMAN");
+		statisticsDto.setCountHumanDna(IterableUtils.size(Hdnas));
+		if (IterableUtils.size(Hdnas) == 0) {
+			statisticsDto.setRatio(0);
+		}else {
+			statisticsDto.setRatio((float) IterableUtils.size(Mdnas)/IterableUtils.size(Hdnas));
+	}
         return statisticsDto;
 	
 	}
@@ -110,6 +124,10 @@ public class MutantController {
 
 	public void setStatisticsRepository(StatisticsRepository statisticsRepository) {
 		this.statisticsRepository = statisticsRepository;
+	}
+	
+	public void setDnaRepository(DnaRepository dnaRepository) {
+		this.dnaRepository = dnaRepository;
 	}
 	
 	

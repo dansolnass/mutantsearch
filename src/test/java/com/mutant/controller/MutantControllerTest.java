@@ -7,6 +7,9 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +19,9 @@ import org.springframework.http.ResponseEntity;
 
 import com.mutant.dto.DnaDTO;
 import com.mutant.dto.StatisticsDTO;
+import com.mutant.model.Dna;
 import com.mutant.model.Statistics;
+import com.mutant.repository.DnaRepository;
 import com.mutant.repository.StatisticsRepository;
 import com.mutant.service.IMutantSearchService;
 import com.mutant.service.MutantSearchService;
@@ -41,6 +46,9 @@ public class MutantControllerTest {
     	
     	StatisticsRepository statisticsRepository = mock(StatisticsRepository.class);
     	mutantControllerTest.setStatisticsRepository(statisticsRepository);
+    	
+    	DnaRepository dnaRepository = mock(DnaRepository.class);
+    	mutantControllerTest.setDnaRepository(dnaRepository);
     	// Return interface
 		when(imutantSearchService.busquedaHorizontal(dna, cadenaMutante)).thenReturn(true);
 		
@@ -79,6 +87,9 @@ public class MutantControllerTest {
     	
     	StatisticsRepository statisticsRepository = mock(StatisticsRepository.class);
     	mutantControllerTest.setStatisticsRepository(statisticsRepository);
+    	
+    	DnaRepository dnaRepository = mock(DnaRepository.class);
+    	mutantControllerTest.setDnaRepository(dnaRepository);
     	// Return interface
 		when(imutantSearchService.busquedaHorizontal(dna, cadenaMutante)).thenReturn(true);
 		
@@ -108,19 +119,25 @@ public class MutantControllerTest {
     	IMutantSearchService imutantSearchService = mock(IMutantSearchService.class);
     	mutantControllerTest.setiMutantSearchService(imutantSearchService);
     	
-    	StatisticsRepository statisticsRepository = mock(StatisticsRepository.class);
-    	mutantControllerTest.setStatisticsRepository(statisticsRepository);
+    	DnaRepository dnaRepository = mock(DnaRepository.class);
+    	mutantControllerTest.setDnaRepository(dnaRepository);
     	// set v
-    	Statistics statistics = new Statistics();
-    	statistics.setProperty("VALOR_MUTANTES");
-    	statistics.setValue(1);
-    	Optional<Statistics> s = Optional.of(statistics);
-		when(statisticsRepository.findById("VALOR_MUTANTES")).thenReturn(s);
-		statistics = new Statistics();
-    	statistics.setProperty("VALOR_HUMANOS");
-    	statistics.setValue(1);
-    	s = Optional.of(statistics);
-		when(statisticsRepository.findById("VALOR_HUMANOS")).thenReturn(s);
+    	Dna dna = new Dna();
+    	dna.setId(1);
+    	dna.setDna("");
+    	dna.setType("MUTANT");
+    	Iterable<Dna> s;
+    	List<Dna> listaMutante =new ArrayList<Dna>();
+    	listaMutante.add(dna);
+    	s = listaMutante;
+		when(dnaRepository.findByType("MUTANT")).thenReturn(s);
+		dna.setId(2);
+    	dna.setDna("");
+    	dna.setType("HUMAN");
+    	List<Dna> listHumana  =new ArrayList<Dna>();;
+    	listHumana.add(dna);
+    	s = listaMutante;
+		when(dnaRepository.findByType("HUMAN")).thenReturn(s);
 		
     	StatisticsDTO responseTest =mutantControllerTest.stats();
         assertNotNull(responseTest);
