@@ -1,0 +1,122 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: mutantsearch
+  namespace: mutant
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: mutantsearch
+        version: v1
+    spec:
+      containers:
+      - name: mutantsearch
+        image: 10.129.146.30:8081/mutantsearch:@Ver_imagen@
+        command: ["/bin/sh"]
+        args: ["-c","java -Duser.timezone=America/Bogota -Dspring.profiles.active=@envprof@ -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "1024Mi"
+        ports:
+        - containerPort: 9020       
+        volumeMounts:
+        - name: localtime-volume
+          mountPath: /etc/localtime
+        - name: locale-volume-logs
+          mountPath: /data/logs/transferencias/txpendingsend  
+        - name: locale-volume-commons
+          mountPath: /data/commons
+        - name: locale-volume-keystore
+          mountPath: /usr/local/jks/    
+        env:
+        - name: QUEUE_GENERIC_NAME
+          value: "task_queue"   
+        - name: ROUTING_KEY
+          value: "audit_coretin_01"   
+        - name: PATH_CONFIG_CORE_TIN_COMMONS
+          value: "/data/commons"     
+        - name: PATH_LOGS
+          value: "/data/logs/transferencias/txpendingsend"
+        - name: JAVA_OPTS
+          value: "-Xmx920m -Xms920m"    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mutantsearch
+  namespace: transferencias
+  labels:
+    app: mutantsearch
+spec:
+  selector:
+    app: mutantsearch
+  ports:
+  - name: tcp-31920-9020
+    protocol: TCP
+    port: 31920
+    targetPort: 9020
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: mutantsearch-gateway
+  namespace: transferencias
+spec:
+  selector:
+    # Which pods we want to expose as Istio router
+    # This label points to the default one installed from file istio-demo.yaml
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    # Here we specify which Kubernetes service names
+    # we want to serve through this Gateway
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mutantsearch
+  namespace: transferencias
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - mutantsearch-gateway
+  http:
+  - match:
+    - uri:
+        regex: '/CORETIN/updatesigner'
+    - uri:
+        prefix: /CORETIN/mutantsearch/health
+    route:
+    - destination:
+        host: mutantsearch
+        port:
+          number: 31901
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mutantsearch
+  namespace: transferencias
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mutantsearch
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 60

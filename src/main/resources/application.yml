@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+
+app:
+    profile: ${spring.profiles.active}
+    
+spring:
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url:  jdbc:mysql://localhost:3306/mutant
+    username:  mutantuser
+    password:  ThePassword  
+    driver-class-name:  com.mysql.jdbc.Driver
+
+       
