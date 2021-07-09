@@ -1,4 +1,4 @@
-# mutantsearch
+# MUTANTSEARCH
 repo fuentes java para servicios MercadoLibre
 
 
@@ -6,9 +6,13 @@ repo fuentes java para servicios MercadoLibre
 Para la ejecución del metodo de validación de si el DNA es de mutantes o humanos
 se debe ejecutar el método 
 
+# Servicio verificación Mutante o Humano
 POST /mutant/
-URL: 
-REQUEST
+
+# URL: 
+http://ec2-18-118-158-73.us-east-2.compute.amazonaws.com:8080/mutant
+
+# REQUEST
 De acuerdo a lo solicitado el cuerpo o body de la petición debe tener la siguiente estructura: 
 
 {
@@ -21,17 +25,24 @@ De acuerdo a lo solicitado el cuerpo o body de la petición debe tener la siguie
         "TCACTG"
     ]
 }
-RESPONSE:
+
+
+# RESPONSE:
 Sin body 
 http status code 200 si es mutante
 http status code 403 si es humano
 
+
+# Servicio consulta estadisticas
 GET /stats
-URL: 
+
+# URL: 
 http://ec2-18-118-158-73.us-east-2.compute.amazonaws.com:8080/stats
-REQUEST
+
+# REQUEST
 N/A
-RESPONSE
+
+# RESPONSE
 con la estructura solicitada 
 {
     "count_mutant_dna": 2,
